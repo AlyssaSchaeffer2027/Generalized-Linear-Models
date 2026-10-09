@@ -1,0 +1,270 @@
+---
+title: "Generalized Linear Models"
+author: "Alyssa Schaeffer"
+date: "2026-10-06"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+#Poisson of Species Dataset
+> library(readr)
+> species <- read_csv("species.csv")
+Rows: 90 Columns: 3                                                                         
+── Column specification ────────────────────────────────────────────────────────────────────
+Delimiter: ","
+chr (1): pH
+dbl (2): Biomass, Species
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> View(species)
+> summary(species)
+      pH               Biomass           Species     
+ Length:90          Min.   :0.05018   Min.   : 2.00  
+ Class :character   1st Qu.:1.44132   1st Qu.:12.25  
+ Mode  :character   Median :3.10836   Median :18.50  
+                    Mean   :3.55701   Mean   :19.46  
+                    3rd Qu.:5.08570   3rd Qu.:25.75  
+                    Max.   :9.98177   Max.   :44.00  
+
+#Creation of all possible model combinations:
+> mod_intercept <- lm(species$Species~1)
+> mod1 <- lm(species$Species~species$pH, data = species)
+> mod2 <- lm(species$Species~species$Biomass, data = species)
+> mod3 <- lm(species$Species~species$pH*species$Biomass, data = species)
+> mod4 <- lm(species$Species~species$pH+species$Biomass, data = species)
+
+#Model Selection:
+#First load the package AICcmodavg
+> library(AICcmodavg)
+
+#AICc:
+> AICc(mod_intercept)
+[1] 667.1396
+
+> AICc(mod1)
+[1] 622.5944
+
+> AICc(mod2)
+[1] 659.7421
+
+> AICc(mod3)
+[1] 505.7315
+
+> AICc(mod4)      #This has the lowest AICc!
+[1] 501.5387
+
+> summary(mod4)
+
+Call:
+lm(formula = species$Species ~ species$pH + species$Biomass, 
+    data = species)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-8.965 -2.693  0.062  2.171 15.508 
+
+Coefficients:
+                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      40.2449     1.0923   36.84   <2e-16 ***
+species$pHlow   -22.6200     1.0818  -20.91   <2e-16 ***
+species$pHmid   -10.6418     1.0063  -10.57   <2e-16 ***
+species$Biomass  -2.7276     0.1717  -15.89   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 3.783 on 86 degrees of freedom
+Multiple R-squared:  0.8524,	Adjusted R-squared:  0.8472 
+F-statistic: 165.5 on 3 and 86 DF,  p-value: < 2.2e-16
+
+#Poisson GLM:
+glm(formula = variable1 ~ variable2, family = "poisson", data = dataset name)
+
+> glm(formula = Species ~ pH + Biomass, family = "poisson", data = species)
+
+Call:  glm(formula = Species ~ pH + Biomass, family = "poisson", data = species)
+
+Coefficients:
+(Intercept)        pHlow        pHmid      Biomass  
+     3.8489      -1.1364      -0.4452      -0.1276  
+
+Degrees of Freedom: 89 Total (i.e. Null);  86 Residual
+Null Deviance:	    452.3 
+Residual Deviance: 99.24 	AIC: 526.4
+
+#Logistic Regression of Isolation Dataset
+> library(readr)
+> Isolation <- read_csv("Isolation.csv")
+Rows: 50 Columns: 3                                                                       
+── Column specification ────────────────────────────────────────────────────────────────────
+Delimiter: ","
+dbl (3): incidence, area, isolation
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> View(Isolation)
+> summary(Isolation)
+   incidence         area         isolation    
+ Min.   :0.00   Min.   :0.153   Min.   :2.023  
+ 1st Qu.:0.00   1st Qu.:2.248   1st Qu.:4.823  
+ Median :1.00   Median :4.170   Median :5.801  
+ Mean   :0.58   Mean   :4.319   Mean   :5.856  
+ 3rd Qu.:1.00   3rd Qu.:6.431   3rd Qu.:7.191  
+ Max.   :1.00   Max.   :9.269   Max.   :9.577  
+ 
+#Creation of all possible model combinations:
+> mod_intercept <- lm(Isolation$incidence~1)
+> mod1 <- lm(Isolation$incidence~Isolation$area, data = Isolation)
+> mod2 <- lm(Isolation$incidence~Isolation$isolation, data = Isolation)
+> mod3 <- lm(Isolation$incidence~Isolation$area*Isolation$isolation, data = Isolation)
+> mod4 <- lm(Isolation$incidence~Isolation$area+Isolation$isolation, data = Isolation)
+
+#Model selection:
+#AICc:
+> AICc(mod_intercept)
+[1] 75.53779
+
+> AICc(mod1)
+[1] 59.49274
+
+> AICc(mod2)
+[1] 45.55016
+
+> AICc(mod3)      #This has the lowest AICc!
+[1] 38.92573
+
+> AICc(mod4)
+[1] 39.21524
+
+> summary(mod3)
+
+Call:
+lm(formula = Isolation$incidence ~ Isolation$area * Isolation$isolation, 
+    data = Isolation)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.65053 -0.19053 -0.02984  0.22985  0.80616 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                         1.58058    0.37054   4.266 9.82e-05 ***
+Isolation$area                     -0.03883    0.06696  -0.580  0.56483    
+Isolation$isolation                -0.21648    0.05715  -3.788  0.00044 ***
+Isolation$area:Isolation$isolation  0.01878    0.01161   1.617  0.11271    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3323 on 46 degrees of freedom
+Multiple R-squared:  0.5829,	Adjusted R-squared:  0.5557 
+F-statistic: 21.43 on 3 and 46 DF,  p-value: 7.855e-09
+
+#Logistic regression:
+glm(formula = variable1 ~ variable2, family = "binomial", data = dataset name)
+
+> glm(formula = Isolation$incidence ~ Isolation$area * Isolation$isolation, family = "binomial", data = Isolation)
+
+Call:  glm(formula = Isolation$incidence ~ Isolation$area * Isolation$isolation, 
+    family = "binomial", data = Isolation)
+
+Coefficients:
+                       (Intercept)                      Isolation$area  
+                            4.0313                              1.3807  
+               Isolation$isolation  Isolation$area:Isolation$isolation  
+                           -0.9422                             -0.1291  
+
+Degrees of Freedom: 49 Total (i.e. Null);  46 Residual
+Null Deviance:	    68.03 
+Residual Deviance: 28.25 	AIC: 36.25
+
+#Gamma GLM of Mole Rat dataset:
+> library(readr)
+> molerat <- read_csv("molerat.csv")
+Rows: 35 Columns: 3                                                                       
+── Column specification ────────────────────────────────────────────────────────────────────
+Delimiter: ","
+chr (1): caste
+dbl (2): lnmass, lnenergy
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+> View(molerat)
+> summary(molerat)
+    caste               lnmass         lnenergy    
+ Length:35          Min.   :3.850   Min.   :3.555  
+ Class :character   1st Qu.:4.248   1st Qu.:3.902  
+ Mode  :character   Median :4.511   Median :4.190  
+                    Mean   :4.540   Mean   :4.193  
+                    3rd Qu.:4.844   3rd Qu.:4.489  
+                    Max.   :5.263   Max.   :5.043 
+                    
+#Creation of all possible model combinations:
+> mod_intercept <- lm(molerat$lnenergy~1)
+> mod1 <- lm(molerat$lnenergy~molerat$caste, data = molerat)
+> mod2 <- lm(molerat$lnenergy~molerat$lnmass, data = molerat)
+> mod3 <- lm(molerat$lnenergy~molerat$caste + molerat$lnmass, data = molerat)
+> mod4 <- lm(molerat$lnenergy~molerat$caste*molerat$lnmass, data = molerat)
+
+#Model selection:
+#AICc:
+> AICc(mod_intercept)
+[1] 33.89116
+
+> AICc(mod1)
+[1] 35.79775
+
+> AICc(mod2)
+[1] 25.02576
+
+> AICc(mod3)
+[1] 20.43932      #This has the lowest AICc!
+
+> AICc(mod4)
+[1] 22.04315
+
+> summary(mod3)
+
+Call:
+lm(formula = molerat$lnenergy ~ molerat$caste + molerat$lnmass, 
+    data = molerat)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.73388 -0.19371  0.01317  0.17578  0.47673 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)         -0.09687    0.94230  -0.103   0.9188    
+molerat$casteworker  0.39334    0.14611   2.692   0.0112 *  
+molerat$lnmass       0.89282    0.19303   4.625 5.89e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.2966 on 32 degrees of freedom
+Multiple R-squared:  0.409,	Adjusted R-squared:  0.3721 
+F-statistic: 11.07 on 2 and 32 DF,  p-value: 0.0002213
+
+#Gamma GLM:
+glm(formula = variable1 ~ variable2, family = "Gamma"(link=log), data = dataset name)
+
+> glm(formula = lnenergy ~ caste + lnmass, family = "Gamma"(link = log), data = molerat)
+
+Call:  glm(formula = lnenergy ~ caste + lnmass, family = Gamma(link = log), 
+    data = molerat)
+
+Coefficients:
+(Intercept)  casteworker       lnmass  
+    0.42752      0.09012      0.20928  
+
+Degrees of Freedom: 34 Total (i.e. Null);  32 Residual
+Null Deviance:	    0.269 
+Residual Deviance: 0.1598 	AIC: 18.79
